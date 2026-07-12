@@ -1,0 +1,31 @@
+# Keep the build context small and secrets/private data out of the image.
+#
+# NOTE: do NOT ignore chroma_db/ — the Dockerfile bakes it into the image.
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Secrets / local env
+.env
+.env.*
+
+# Frontend — deployed separately, not part of the backend image
+web/
+
+# Private source documents — the index is already baked from them, so the raw
+# files don't need to ship in the serving image
+docs/
+
+# Git, docs, tooling
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+*.md
+.claude/
+
+# OS junk
+.DS_Store

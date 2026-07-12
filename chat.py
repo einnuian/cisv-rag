@@ -1,36 +1,13 @@
+"""CLI for the CISV advisor: retrieve context and stream a cited answer."""
+
 import os
 
 import chromadb
-from dotenv import load_dotenv
 from openai import OpenAI
 
-from ingestion_pipeline import CHROMA_PATH, COLLECTION_NAME, EMBEDDING_MODEL
-from providers import make_provider
-
-load_dotenv()
-
-TOP_K = 6
-
-# Which generation backend to use: 'mistral' or 'anthropic'. Override in .env.
-# Fall back to mistral if not set
-LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'mistral')
-
-# API keys each provider needs, on top of OPENAI_API_KEY (always required for embeddings).
-PROVIDER_KEYS = {'anthropic': 'ANTHROPIC_API_KEY', 'mistral': 'MISTRAL_API_KEY'}
-
-
-def retrieve(question, openai_client, collection, top_k=TOP_K):
-    """Embed the question and return the top-k most similar chunks from Chroma."""
-    embedding = openai_client.embeddings.create(
-        input=[question],
-        model=EMBEDDING_MODEL,
-    ).data[0].embedding
-
-    results = collection.query(query_embeddings=[embedding], n_results=top_k)
-    return [
-        {'text': doc, 'source': meta['source'], 'page': meta['page']}
-        for doc, meta in zip(results['documents'][0], results['metadatas'][0])
-    ]
+from rag.config import CHROMA_PATH, COLLECTION_NAME, LLM_PROVIDER, PROVIDER_KEYS
+from rag.providers import make_provider
+from rag.retrieval import retrieve
 
 
 def main():
@@ -43,7 +20,7 @@ def main():
     try:
         collection = chroma.get_collection(COLLECTION_NAME)
     except Exception:
-        raise SystemExit('No document index found — run `python ingestion_pipeline.py` first.')
+        raise SystemExit('No document index found — run `python -m rag.ingestion` first.')
 
     provider = make_provider(LLM_PROVIDER)
     openai_client = OpenAI()

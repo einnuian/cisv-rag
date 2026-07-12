@@ -6,3 +6,5 @@ pypdf
 python-docx
 python-dotenv
 tqdm
+fastapi
+uvicorn[standard]
